@@ -1,6 +1,6 @@
 # calucaldora3cat 
 Calculadora entregues
-Aquí tens una descripció de la calculadora que pots incloure en un fitxer `README.md`:
+
 
 ---
 
