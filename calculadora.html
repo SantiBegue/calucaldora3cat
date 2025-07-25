@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Data d'Inici</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 600px; /* Increased max-width for calendar */
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #1a202c;
+            font-size: 1.875rem; /* 30px */
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+            text-align: left;
+        }
+        input[type="date"], textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #2d3748;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #4c51bf; /* Indigo 600 */
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.125rem; /* 18px */
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(76, 81, 191, 0.3);
+        }
+        button:hover {
+            background-color: #3e449b; /* Indigo 700 */
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .result {
+            margin-top: 24px;
+            padding: 16px;
+            background-color: #e2e8f0; /* Gray 200 */
+            border-radius: 12px;
+            font-size: 1.125rem;
+            color: #2d3748;
+            font-weight: 600;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+        .result p {
+            margin-bottom: 8px;
+        }
+        .result span {
+            color: #4c51bf; /* Indigo 600 */
+        }
+        .info-box {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #f7fafc; /* Gray 50 */
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        .info-box ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+        .info-box .warning {
+            color: #e53e3e; /* Red 500 */
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        /* Calendar Styling */
+        .calendar-container {
+            margin-top: 30px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            display: flex; /* Use flexbox for multiple calendars */
+            flex-wrap: wrap; /* Allow calendars to wrap to the next line */
+            justify-content: center;
+            gap: 20px; /* Space between monthly calendars */
+        }
+        .month-calendar {
+            flex: 1 1 280px; /* Allow calendars to grow/shrink, with a base width */
+            max-width: 300px; /* Max width for each month calendar */
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: center; /* Center month/year */
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+        .calendar-day-name {
+            font-weight: 600;
+            color: #4a5568;
+            padding: 8px 0;
+            font-size: 0.875rem;
+        }
+        .calendar-day {
+            padding: 8px 0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #2d3748;
+            background-color: #f7fafc;
+        }
+        .calendar-day.empty {
+            background-color: transparent;
+        }
+        .calendar-day.weekend {
+            background-color: #fbd38d; /* Orange 200 */
+            color: #6b46c1; /* Purple 700 */
+            font-weight: 500;
+        }
+        .calendar-day.holiday {
+            background-color: #feb2b2; /* Red 200 */
+            color: #c53030; /* Red 700 */
+            font-weight: 500;
+        }
+        /* Phase colors */
+        .calendar-day.development-phase {
+            background-color: #2dd4bf; /* Teal 400 */
+            color: #ffffff;
+        }
+        .calendar-day.qa-review-phase {
+            background-color: #60a5fa; /* Blue 400 */
+            color: #ffffff;
+        }
+        .calendar-day.product-validation-phase {
+            background-color: #a78bfa; /* Purple 400 */
+            color: #ffffff;
+        }
+
+        /* Milestone/Delivery highlights (should override phase colors) */
+        .calendar-day.milestone-start {
+            background-color: #667eea; /* Indigo 500 */
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 2px 5px rgba(76, 81, 191, 0.4);
+            position: relative;
+            z-index: 1; /* Ensure it's on top of phase colors */
+        }
+        .calendar-day.milestone-start::after {
+            content: attr(data-milestone);
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            font-weight: 500;
+            color: #4a5568;
+            white-space: nowrap;
+        }
+        .calendar-day.delivery-date {
+            background-color: #38a169; /* Green 600 */
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 2px 5px rgba(56, 161, 105, 0.4);
+            position: relative;
+            z-index: 1; /* Ensure it's on top of phase colors */
+        }
+        .calendar-day.delivery-date::after {
+            content: "Entrega";
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            font-weight: 500;
+            color: #4a5568;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Data d'Inici de Projecte</h1>
+
+        <div class="info-box">
+            <p>Aquesta calculadora determinarà les dates d'inici necessàries basant-se en la data d'entrega i les fites intermèdies:</p>
+            <ul>
+                <li>**Revisió QA:** 5 dies laborables</li>
+                <li>**Validació Producte:** 3 dies laborables</li>
+                <li>**Total de dies laborables necessaris: 8 dies**</li>
+            </ul>
+            <p>Els caps de setmana (dissabtes i diumenges) i els **dies festius de Barcelona** s'exclouen del càlcul.</p>
+            <p class="warning">**AVÍS IMPORTANT:** La llista de festius de Barcelona es pot editar manualment a l'àrea de text. Assegura't de revisar-la i actualitzar-la cada any per a un càlcul precís.</p>
+        </div>
+
+        <label for="deliveryDate" class="mt-6">Data d'entrega (últim dia de treball):</label>
+        <input type="date" id="deliveryDate">
+
+        <label for="customHolidays" class="mt-4">Dies festius addicionals (YYYY-MM-DD, un per línia):</label>
+        <textarea id="customHolidays" rows="5" placeholder="Exemple:&#10;2025-01-01&#10;2025-01-06&#10;2025-09-24"></textarea>
+
+
+        <button onclick="calculateStartDate()">Calcular Dates d'Inici</button>
+
+        <div id="result" class="result">
+            <p>Data d'inici de la **Validació de Producte**: <span id="productValidationStartDate"></span></p>
+            <p>Data d'inici de la **Revisió QA**: <span id="qaReviewStartDate"></span></p>
+            <p>Data d'entrega de **versió**: <span id="versionDeliveryDate"></span></p>
+
+            <div class="calendar-container" id="fullCalendarContainer">
+                <!-- Calendars will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Llista de dies festius a Barcelona per defecte (format YYYY-MM-DD)
+        // Aquesta llista es combinarà amb els festius personalitzats de l'usuari.
+        const defaultBarcelonaHolidays = [
+            "2025-01-01", // Any Nou
+            "2025-01-06", // Reis
+            "2025-04-18", // Divendres Sant
+            "2025-04-21", // Dilluns de Pasqua
+            "2025-05-01", // Dia del Treball
+            "2025-06-09", // Segona Pasqua (Pascua Granada)
+            "2025-06-24", // Sant Joan
+            "2025-08-15", // L'Assumpció
+            "2025-09-11", // Diada Nacional de Catalunya
+            "2025-09-24", // La Mercè (Festa Major de Barcelona)
+            "2025-10-12", // Festa Nacional d'Espanya (si cau en dia laborable)
+            "2025-11-01", // Tots Sants
+            "2025-12-06", // Dia de la Constitució (si cau en dia laborable)
+            "2025-12-08", // La Immaculada Concepció (si cau en dia laborable)
+            "2025-12-25", // Nadal
+            "2025-12-26"  // Sant Esteve
+            // Afegeix aquí els festius dels anys següents segons sigui necessari
+        ];
+
+        // Variables per emmagatzemar les dates calculades per al calendari
+        let calculatedDeliveryDate;
+        let calculatedProductValidationStartDate;
+        let calculatedQaReviewStartDate;
+        let calculatedVersionDeliveryDate;
+        let allHolidaysTimestamps; // Per emmagatzemar tots els festius (per defecte + personalitzats)
+
+        function calculateStartDate() {
+            const deliveryDateInput = document.getElementById('deliveryDate').value;
+            const customHolidaysInput = document.getElementById('customHolidays').value;
+            const resultDiv = document.getElementById('result');
+            const versionDeliveryDateSpan = document.getElementById('versionDeliveryDate');
+            const qaReviewStartDateSpan = document.getElementById('qaReviewStartDate');
+            const productValidationStartDateSpan = document = document.getElementById('productValidationStartDate');
+
+            if (!deliveryDateInput) {
+                alert('Si us plau, selecciona una data d\'entrega.');
+                return;
+            }
+
+            const deliveryDate = new Date(deliveryDateInput);
+            deliveryDate.setHours(0, 0, 0, 0); // Ajustar a l'inici del dia
+
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+
+            // Processar festius personalitzats
+            const customHolidaysParsed = customHolidaysInput.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(line)) // Basic YYYY-MM-DD validation
+                .map(dateString => new Date(dateString).setHours(0, 0, 0, 0)); // Convertir a timestamp
+
+            // Combinar festius per defecte amb festius personalitzats, eliminant duplicats
+            allHolidaysTimestamps = [...new Set([
+                ...defaultBarcelonaHolidays.map(dateString => new Date(dateString).setHours(0, 0, 0, 0)),
+                ...customHolidaysParsed
+            ])];
+
+            // Funció auxiliar per retrocedir un nombre especificat de dies laborables
+            function goBackWorkingDays(startDate, daysToSubtract) {
+                let tempDate = new Date(startDate);
+                tempDate.setHours(0, 0, 0, 0); // Assegurar que estem a l'inici del dia
+
+                let daysCounted = 0;
+                while (daysCounted < daysToSubtract) {
+                    tempDate.setDate(tempDate.getDate() - 1); // Retrocedeix un dia de calendari
+                    const dayOfWeek = tempDate.getDay();
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6); // 0 = diumenge, 6 = dissabte
+                    const isHoliday = allHolidaysTimestamps.includes(tempDate.getTime()); // Comprova si és festiu (incloent personalitzats)
+
+                    if (!isWeekend && !isHoliday) { // Si no és cap de setmana ni festiu
+                        daysCounted++;
+                    }
+                }
+                return tempDate;
+            }
+
+            // 1. Data d'inici de la Validació de Producte
+            // Aquesta fita dura 3 dies laborables i FINALITZA el dia d'entrega.
+            calculatedDeliveryDate = new Date(deliveryDate); // Store delivery date
+            calculatedProductValidationStartDate = goBackWorkingDays(deliveryDate, 3);
+            productValidationStartDateSpan.textContent = calculatedProductValidationStartDate.toLocaleDateString('ca-ES', options);
+
+            // 2. Data d'inici de la Revisió QA
+            // Aquesta fita dura 5 dies laborables i FINALITZA quan comença la Validació de Producte.
+            calculatedQaReviewStartDate = goBackWorkingDays(calculatedProductValidationStartDate, 5);
+            qaReviewStartDateSpan.textContent = calculatedQaReviewStartDate.toLocaleDateString('ca-ES', options);
+
+            // 3. Data d'entrega de versió (anteriorment "Data d'inici del Projecte (desenvolupament)")
+            // Aquesta és la data d'inici del treball de desenvolupament, que finalitza quan comença la Revisió QA.
+            calculatedVersionDeliveryDate = new Date(calculatedQaReviewStartDate); // Simplement assignem la mateixa data
+            versionDeliveryDateSpan.textContent = calculatedVersionDeliveryDate.toLocaleDateString('ca-ES', options);
+
+            // Renderitzar el calendari complet amb tots els mesos rellevants
+            renderFullCalendar();
+
+            resultDiv.style.display = 'block'; // Mostra el resultat
+        }
+
+        // Funció per renderitzar un mes individual del calendari
+        function renderCalendarMonth(year, month) {
+            const monthCalendarDiv = document.createElement('div');
+            monthCalendarDiv.classList.add('month-calendar');
+
+            const headerDiv = document.createElement('div');
+            headerDiv.classList.add('calendar-header');
+            headerDiv.textContent = new Date(year, month, 1).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' });
+            monthCalendarDiv.appendChild(headerDiv);
+
+            const gridDiv = document.createElement('div');
+            gridDiv.classList.add('calendar-grid');
+
+            // Weekday names
+            const dayNames = ['Dl', 'Dm', 'Dc', 'Dj', 'Dv', 'Ds', 'Dg'];
+            dayNames.forEach(name => {
+                const nameDiv = document.createElement('div');
+                nameDiv.classList.add('calendar-day-name');
+                nameDiv.textContent = name;
+                gridDiv.appendChild(nameDiv);
+            });
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Adjust first day of week to be Monday (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
+            let startDay = firstDayOfMonth.getDay();
+            if (startDay === 0) startDay = 7; // If Sunday, treat as 7th day for alignment
+            startDay = startDay - 1; // Adjust so Monday (1) maps to 0 for column index
+
+            // Add empty days for the beginning of the month
+            for (let i = 0; i < startDay; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.classList.add('calendar-day', 'empty');
+                gridDiv.appendChild(emptyDiv);
+            }
+
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                date.setHours(0, 0, 0, 0); // Normalize for comparison
+
+                const dayDiv = document.createElement('div');
+                dayDiv.classList.add('calendar-day');
+                dayDiv.textContent = day;
+
+                const dayOfWeek = date.getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isHoliday = allHolidaysTimestamps.includes(date.getTime()); // Comprova si és festiu (incloent personalitzats)
+
+                // Apply phase colors
+                let phaseClass = '';
+                if (date.getTime() >= calculatedProductValidationStartDate.getTime() && date.getTime() < calculatedDeliveryDate.getTime()) {
+                    phaseClass = 'product-validation-phase';
+                } else if (date.getTime() >= calculatedQaReviewStartDate.getTime() && date.getTime() < calculatedProductValidationStartDate.getTime()) {
+                    phaseClass = 'qa-review-phase';
+                } else if (date.getTime() >= calculatedVersionDeliveryDate.getTime() && date.getTime() < calculatedQaReviewStartDate.getTime()) {
+                    phaseClass = 'development-phase';
+                }
+
+                if (phaseClass && !isWeekend && !isHoliday) {
+                    dayDiv.classList.add(phaseClass);
+                }
+
+                // Apply weekend and holiday colors (these can override phase colors for non-working days)
+                if (isWeekend) {
+                    dayDiv.classList.add('weekend');
+                }
+                if (isHoliday) {
+                    dayDiv.classList.add('holiday');
+                }
+
+                // Highlight milestone start dates (these should override phase/weekend/holiday colors)
+                if (date.getTime() === calculatedVersionDeliveryDate.getTime()) {
+                    dayDiv.classList.add('milestone-start');
+                    dayDiv.dataset.milestone = "Entrega Versió";
+                }
+                if (date.getTime() === calculatedQaReviewStartDate.getTime()) {
+                    dayDiv.classList.add('milestone-start');
+                    dayDiv.dataset.milestone = "Inici QA";
+                }
+                if (date.getTime() === calculatedProductValidationStartDate.getTime()) {
+                    dayDiv.classList.add('milestone-start');
+                    dayDiv.dataset.milestone = "Inici Producte";
+                }
+                if (date.getTime() === calculatedDeliveryDate.getTime()) {
+                    dayDiv.classList.add('delivery-date');
+                }
+
+                gridDiv.appendChild(dayDiv);
+            }
+            monthCalendarDiv.appendChild(gridDiv);
+            return monthCalendarDiv;
+        }
+
+        // Funció per renderitzar el calendari complet amb múltiples mesos
+        function renderFullCalendar() {
+            const fullCalendarContainer = document.getElementById('fullCalendarContainer');
+            fullCalendarContainer.innerHTML = ''; // Clear previous calendars
+
+            if (!calculatedVersionDeliveryDate || !calculatedDeliveryDate) {
+                return; // Do nothing if dates aren't calculated yet
+            }
+
+            let currentMonth = calculatedVersionDeliveryDate.getMonth();
+            let currentYear = calculatedVersionDeliveryDate.getFullYear();
+            const endMonth = calculatedDeliveryDate.getMonth();
+            const endYear = calculatedDeliveryDate.getFullYear();
+
+            // Loop through all months from start to end date
+            while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
+                const monthCalendar = renderCalendarMonth(currentYear, currentMonth);
+                fullCalendarContainer.appendChild(monthCalendar);
+
+                // Move to the next month
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
